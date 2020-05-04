@@ -20,6 +20,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -177,8 +180,10 @@ public class ShipService {
             try {
                 long minDate = Long.parseLong(min);
                 long maxDate = Long.parseLong(max);
+                 java.sql.Date  minLocalDate  = java.sql.Date.valueOf(Instant.ofEpochMilli(minDate).atZone(ZoneId.systemDefault()).toLocalDate());
+                java.sql.Date  maxLocalDate  = java.sql.Date.valueOf(Instant.ofEpochMilli(maxDate).atZone(ZoneId.systemDefault()).toLocalDate());
 
-                spec = spec.and(minmaxProdDateContains(getYear(minDate), getYear(maxDate)));
+                spec = spec.and(minmaxProdDateContains(minLocalDate, maxLocalDate));
             } catch (Exception ex) {
             }
 
@@ -285,8 +290,9 @@ public class ShipService {
 
     }
 
-    static Specification<Ship> minmaxProdDateContains(int min, int max) {
-        return (ship, cq, cb) -> cb.between(cb.function("YEAR", Integer.class, ship.get("prodDate")), min, max);
+    static Specification<Ship> minmaxProdDateContains(java.sql.Date min, java.sql.Date max) {
+        //return (ship, cq, cb) -> cb.between(cb.function("YEAR", Integer.class, ship.get("prodDate")), min, max);
+        return (ship, cq, cb) -> cb.between(ship.get("prodDate"), min, max);
     }
 
     static Specification<Ship> isUsedContains(boolean isUsed) {
